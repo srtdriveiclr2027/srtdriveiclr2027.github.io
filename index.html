@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="SRTDrive refines frozen autonomous-driving planners by generating reference-anchored trajectory alternatives and selecting them relative to the original plan." />
+    <meta name="theme-color" content="#263788" />
+    <title>SRTDrive — Safety-Aware Trajectory Refinement</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="site.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#abstract">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav-wrap">
+        <a class="brand" href="#top" aria-label="SRTDrive home"><span class="brand-symbol" aria-hidden="true"><i></i><i></i><i></i></span><span>SRTDRIVE</span></a>
+        <nav aria-label="Page sections">
+          <a href="#abstract">Abstract</a><a href="#idea">Idea</a><a href="#method">Method</a><a href="#results">Results</a><a href="#scope">Scope</a><a href="#citation">Citation</a>
+        </nav>
+        <span class="venue">ICLR 2027 · ANONYMOUS</span>
+      </div>
+    </header>
+    <main id="top">
+      <section class="hero" aria-labelledby="page-title">
+        <div class="shell hero-copy">
+          <p class="kicker">Anonymous ICLR 2027 submission</p>
+          <h1 id="page-title">SRTDrive<span>Safety-Aware Trajectory Refinement via <br />Reference-Anchored Advantage Learning</span></h1>
+          <p class="hero-summary">Keep the original plan. Generate alternatives around it. Select by what each alternative changes relative to the reference.</p>
+        </div>
+      </section>
+
+      <section id="abstract" class="section abstract-section" aria-labelledby="abstract-title">
+        <div class="shell two-column">
+          <div class="section-heading"><p class="kicker">01 · Overview</p><h2 id="abstract-title">Abstract</h2></div>
+          <div class="abstract-copy">
+            <p>End-to-end driving planners may still output a trajectory with collision risk, even when a small change could help. Independently scoring candidate trajectories does not tell a planner what a replacement improves—or what it worsens—relative to its original plan.</p>
+            <p><strong>SRTDrive</strong> is a post-hoc refinement framework that freezes the base planner and keeps its output unchanged as a reference candidate. A deformation-flow generator proposes progress and normal–tangential adjustments around that reference. A set-contextual selector scores each candidate relative to the original using candidate–reference representations and geometric relations.</p>
+            <p>Collision-prioritized lexicographic supervision first favors candidates that do not worsen collision relative to the reference across horizons, then considers trajectory error within that set. The current manuscript reports open-loop results on nuScenes; its closed-loop Bench2Drive results are not yet complete.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="idea" class="section figure-section" aria-labelledby="idea-title">
+        <div class="shell">
+          <div class="section-heading wide"><p class="kicker">02 · Core idea</p><h2 id="idea-title">Compare against the plan<br />you already have.</h2><p>The original output is not discarded or treated as an implicit safe fallback. It remains an explicit candidate in the final choice.</p></div>
+          <a class="figure-panel" href="assets/figure-1.png" target="_blank" rel="noopener" data-figure-link aria-describedby="figure-1-caption"><img src="assets/figure-1.png" width="1224" height="608" loading="eager" decoding="async" alt="Manuscript diagram comparing conventional independent candidate scoring with SRTDrive reference-anchored generation and selection" /></a>
+          <div class="media-description" id="figure-1-caption"><b class="caption-label">Figure 1 · Conventional planning versus SRTDrive.</b><p>The frozen planner's output stays in the candidate set. Alternatives are generated around it, and a single selector decides whether to retain or replace it. <a href="assets/figure-1.png" target="_blank" rel="noopener">View full size ↗</a></p></div>
+          <div class="info-grid" aria-label="SRTDrive principles">
+            <article class="info-card"><span>01 · Preserve</span><h3>Frozen base planner</h3><p>Reuse the pretrained planner and keep its trajectory unchanged as the reference candidate.</p></article>
+            <article class="info-card"><span>02 · Generate</span><h3>Reference-anchored alternatives</h3><p>Model progress and normal–tangential deformations around the original trajectory.</p></article>
+            <article class="info-card"><span>03 · Select</span><h3>Relative priority</h3><p>Use candidate–reference differences to decide between keeping and replacing the original.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section id="method" class="section method-section" aria-labelledby="method-title">
+        <div class="shell">
+          <div class="section-heading wide"><p class="kicker">03 · Method</p><h2 id="method-title">Overall architecture</h2><p>Candidate generation and selection are separate, but both are anchored to the frozen planner's reference trajectory.</p></div>
+          <a class="figure-panel" href="assets/figure-2.png" target="_blank" rel="noopener" data-figure-link aria-describedby="figure-2-caption"><img src="assets/figure-2.png" width="1680" height="890" loading="eager" decoding="async" alt="SRTDrive manuscript architecture showing scene and planning features, path-aware generation, and set-contextual candidate selection" /></a>
+          <div class="media-description" id="figure-2-caption"><b class="caption-label">Figure 2 · SRTDrive architecture.</b><p>Scene and path-local BEV context condition a deformation-flow generator. The selector contextualizes all candidates, including the original, before choosing one trajectory. <a href="assets/figure-2.png" target="_blank" rel="noopener">View full size ↗</a></p></div>
+          <div class="detail-list">
+            <article><h3>Path-aware conditioning</h3><p>BEV features are sampled around the reference path and combined with scene tokens, driving command, and ego state.</p></article>
+            <article><h3>Collision-first supervision</h3><p>Training ranks collision non-worsening across horizons before trajectory error; this is a training priority, not an inference-time safety guarantee.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section id="results" class="section figure-section" aria-labelledby="results-title">
+        <div class="shell">
+          <div class="section-heading wide"><p class="kicker">04 · Manuscript evidence</p><h2 id="results-title">Open-loop results<br />on nuScenes.</h2><p>The current draft reports paired base-versus-SRTDrive values for seven frozen planners. Comparisons are valid within a planner, not across planners with different protocols.</p></div>
+          <div class="comparison-panel">
+            <div class="comparison-intro"><span>TABLE 1 · VAD ROW</span><h3>A representative paired result</h3><p>Applying SRTDrive to VAD changes the reported mean L2 error and collision rate without retraining the base planner.</p></div>
+            <div class="metric-comparison"><article><div class="metric-title"><span>Mean L2 ↓</span><strong>0.72 → 0.68 m</strong></div></article><article><div class="metric-title"><span>Collision rate ↓</span><strong>0.17 → 0.13%</strong></div></article></div>
+          </div>
+          <div class="results-table-wrap table-wrap" role="region" aria-label="Open-loop nuScenes results" tabindex="0">
+            <table class="results-table">
+              <caption>Table 1 · nuScenes validation <span>Average over 1, 2, and 3 seconds. Displayed values retain manuscript precision.</span></caption>
+              <thead><tr><th scope="col">Frozen planner</th><th scope="col">L2 (m) ↓<small>Base → +SRT</small></th><th scope="col">Collision (%) ↓<small>Base → +SRT</small></th></tr></thead>
+              <tbody>
+                <tr class="ours"><th scope="row">VAD</th><td>0.72 → 0.68</td><td>0.17 → 0.13</td></tr>
+                <tr><th scope="row">UniAD</th><td>1.09 → 1.08</td><td>0.28 → 0.28</td></tr>
+                <tr><th scope="row">GenAD</th><td>0.54 → 0.54</td><td>0.18 → 0.17</td></tr>
+                <tr><th scope="row">DMAD</th><td>0.62 → 0.61</td><td>0.15 → 0.16</td></tr>
+                <tr><th scope="row">IR-WM</th><td>0.90 → 0.89</td><td>0.64 → 0.64</td></tr>
+                <tr><th scope="row">SparseDrive</th><td>0.61 → 0.61</td><td>0.10 → 0.11</td></tr>
+                <tr><th scope="row">DiffusionDrive</th><td>0.57 → 0.57</td><td>0.08 → 0.08</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-note">The displayed precision masks some small changes; it must not be read as proof of exact equality. Results are mixed: some planners improve, while DMAD and SparseDrive show higher reported collision rates after refinement.</p>
+        </div>
+      </section>
+
+      <section id="scope" class="section" aria-labelledby="scope-title"><div class="shell"><div class="section-heading wide"><p class="kicker">05 · Status &amp; scope</p><h2 id="scope-title">What the current draft supports.</h2><p>This page is intentionally narrower than a finished results release.</p></div><aside class="status-note"><b>Closed-loop evaluation</b><div><p>The manuscript specifies evaluation on 220 Bench2Drive routes, but the +SRT closed-loop table is blank in the supplied draft. No closed-loop improvement is claimed here.</p><p>Collision non-worsening is a supervision priority, not a guarantee for every predicted trajectory. Alternatives remain deformations of the reference and cannot express a fundamentally different route.</p></div></aside></div></section>
+
+      <section id="citation" class="section citation-section" aria-labelledby="citation-title"><div class="shell two-column"><div class="section-heading"><p class="kicker">06 · Citation</p><h2 id="citation-title">Anonymous submission</h2><p>Author and affiliation information is intentionally omitted during double-blind review.</p></div><pre><code>@misc{anonymous_srtdrive_2027,
+  title  = {SRTDrive: Safety-Aware Trajectory Refinement via Reference-Anchored Advantage Learning},
+  author = {Anonymous},
+  note   = {Under review at ICLR 2027}
+}</code></pre></div></section>
+    </main>
+    <footer><div class="shell footer-inner"><span>SRTDrive · Anonymous project page</span><span>ICLR 2027 submission · Preliminary version</span></div></footer>
+    <dialog class="figure-dialog" aria-label="Expanded research figure"><div class="figure-dialog-toolbar"><span>Research figure</span><a data-figure-original target="_blank" rel="noopener">Open original ↗</a><button type="button" data-figure-close autofocus>Close ×</button></div><div class="figure-dialog-stage" role="region" aria-label="Scrollable research figure" tabindex="0"><p class="figure-pan-hint">Swipe to inspect the figure</p><img data-figure-expanded alt="" /></div></dialog>
+    <script src="script.js"></script>
+  </body>
+</html>
